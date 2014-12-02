@@ -265,7 +265,7 @@ class DropboxClient {
 	 * @param $dropbox_path string Dropbox path for destination
 	 * @return object Dropbox file metadata
 	 */	
-	public function UploadFile($src_file, $dropbox_path='', $overwrite=true, $parent_rev=null)
+	public function UploadFile($src_file, $dropbox_path='', $overwrite=true, $parent_rev=null, $progress_changed_callback=null)
 	{
 		if(empty($dropbox_path)) $dropbox_path = basename($src_file);
 		elseif(is_object($dropbox_path) && !empty($dropbox_path->path)) $dropbox_path = $dropbox_path->path;
@@ -342,6 +342,11 @@ class DropboxClient {
 			curl_setopt($context, CURLOPT_PUT, 1);
 			curl_setopt($context, CURLOPT_INFILE, $fh); // file pointer
 			curl_setopt($context, CURLOPT_INFILESIZE, filesize($src_file));
+			if(!empty($progress_changed_callback)) {
+				curl_setopt($context, CURLOPT_NOPROGRESS, FALSE); 
+				curl_setopt($context, CURLOPT_PROGRESSFUNCTION, $progress_changed_callback);
+			}
+
 			$meta = json_decode(self::execCurlAndClose($context));
 			fclose($fh);
 			return self::checkForError($meta);
